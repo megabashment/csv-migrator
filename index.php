@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (empty($_SESSION['user_id'])) {
+    header('Location: /login.html');
+    exit;
+}
 
 // Config
 define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB

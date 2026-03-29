@@ -1,0 +1,27 @@
+name: Deploy to Strato
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
+      - name: Deploy via SFTP
+        run: |
+          lftp -e "
+            set sftp:auto-confirm yes;
+            set net:timeout 10;
+            set net:max-retries 3;
+            open sftp://${{ secrets.SFTP_USER }}:${{ secrets.SFTP_PASS }}@${{ secrets.SFTP_HOST }}:22;
+            mirror --reverse --delete --verbose --exclude .git/ --exclude .github/ --exclude CLAUDE.md ./ /htdocs/tools/csv-migrator/;
+            bye
+          "
