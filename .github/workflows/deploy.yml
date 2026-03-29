@@ -16,12 +16,17 @@ jobs:
         run: sudo apt-get install -y lftp
 
       - name: Deploy via SFTP
+        env:
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_PASS: ${{ secrets.SFTP_PASS }}
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
         run: |
-          lftp -e "
-            set sftp:auto-confirm yes;
-            set net:timeout 10;
-            set net:max-retries 3;
-            open sftp://${{ secrets.SFTP_USER }}:${{ secrets.SFTP_PASS }}@${{ secrets.SFTP_HOST }}:22;
+          mkdir -p ~/.lftp
+          echo "set sftp:auto-confirm yes" > ~/.lftp/rc
+          echo "set net:timeout 10" >> ~/.lftp/rc
+          echo "set net:max-retries 3" >> ~/.lftp/rc
+
+          lftp -u "$SFTP_USER","$SFTP_PASS" sftp://$SFTP_HOST:22 -e "
             mirror --reverse --delete --verbose --exclude .git/ --exclude .github/ --exclude CLAUDE.md ./ /htdocs/tools/csv-migrator/;
             bye
           "
